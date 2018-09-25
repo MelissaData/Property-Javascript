@@ -1,0 +1,558 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Property V4 Demo</title>	
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.css"/>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.7/semantic.min.js"></script>
+    <style>
+        .header img {
+            float: right;
+            width: 188px;
+            height: 80px;
+            background: #555;
+        }
+
+        .header h2 {
+            position: relative;
+            top: 18px;
+            left: 10px;
+        }
+    </style>
+</head>
+<body class="ui container">
+    <p>	
+    <div class="header">
+        <img src="melissa-global-intelligence.jpg" width="188" height="80" alt="logo" />
+        <h2 class="ui header">Property V4 Demo</h2>		
+		<br>
+    </div>	
+	<br>
+    <div class="main ui container">	
+        <div class="ui top attached tabular menu">
+            <a class="item active" data-tab="tab-name">Input</a>
+			<a class="item" data-tab="tab-name3">Request</a>
+            <a class="item" data-tab="tab-name2">Output</a>
+        </div>
+        <!-- Input tab -->
+        <div class="ui bottom attached tab segment active" data-tab="tab-name">
+            <div class="ui two column stackable grid container">
+                <div class="column">
+					<a href="http://wiki.melissadata.com/index.php?title=Property_V4">Property V4 Wiki</a>
+                    <!-- License Key -->
+                    <div class="ui info message">					
+                        <div class="header">
+                            License Key
+                        </div>
+                        <p>Enter here your encrypted and unique license key from Melissa Data. This is necessary for including with each request to the web service. If you do not have a license key, please contact your Melissa Data sales representative at 1-800-MELISSA (1-800-635-4772)</p>
+                    </div> 
+                    <div class="ui input right fluid field">
+                        <input type="text" placeholder="License Key..." name="id">
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="ui info message">
+                        <div class="header">
+                            Property V4 Lookup Type
+                        </div>
+                        <ul class="list">
+                            <li>Lookup Deeds - Returns an array of deeds and/or transactions from the recorder table when given either a deed transaction ID or the FIPs and APN</li>
+                            <li>Lookup Homes by Owner - Returns an array of homes owned by a homeowner based on their address (MAK)</li>
+                            <li>Lookup Property - Returns general information regarding a property</li>
+                        </ul>
+                    </div>
+                    <div class="ui selection dropdown fluid">
+                        <input type="hidden" name="lookupType" onchange="lookupSelected()">
+                        <i class="dropdown icon"></i>
+                        <div class="default text">Select Lookup Type</div>
+                        <div class="menu">
+                            <div class="item" data-value="lookup_Deeds">Lookup Deeds</div>
+                            <div class="item" data-value="lookup_HomesByOwner">Lookup Homes by Owner</div>
+                            <div class="item" data-value="lookup_Property">Lookup Property</div>
+                        </div>
+                    </div>					
+                </div>
+            </div>
+            <div id="lookupInput_container" class="ui container" style="display:none;">
+                <hr>
+                <div class="ui center aligned header">
+                    <h1 id="lookupInput_mainHeader"></h1>
+                </div>
+                <hr>
+                <div class="ui two column stackable grid container" name="inputByLookup">
+                    <div class="column">
+                        <!-- Column Responses -->
+                        <div class="ui container" id="lookupInput_col_Container">
+                            <h2>Column Responses</h2>
+                            <div class="ui info message">
+                                <div class="header">
+                                    Column Responses Descriptions
+                                </div>
+                                <ul class="list" id="lookupInput_col_Descriptions">
+                                </ul>
+                            </div>
+                            <div class="ui two column stackable grid container" id="lookupInput_col_columns">
+                                <div class="column" id="lookupInput_col_column1">
+                                </div>
+                                <div class="column" id="lookupInput_col_column2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <!-- Input Fields -->
+                        <h2>Input Fields</h2>
+                        <div class="ui container" id="lookupInput_fields_Container">                            
+                        </div>
+                        <br><br>
+                        <button class="ui icon button normal" onclick="doClear()">
+                            <i class="erase icon"></i>
+                            Clear
+                        </button>
+                        <button class="ui icon button positive" onclick="doVerify()">
+                            <i class="thumbs up icon"></i>
+                            Send Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+		<!-- REST tab -->
+        <div class="ui bottom attached tab segment" data-tab="tab-name3">
+            <pre name="restOutput">
+                Run a record through first
+            </pre>
+        </div>
+		
+        <!-- Output tab -->
+        <div class="ui bottom attached tab segment" data-tab="tab-name2">
+            <pre name="jsonOutput">
+                Run a record through first
+            </pre>
+        </div>
+        <p><br>
+    </div>
+
+    <script>
+        $('.menu .item').tab();
+        $('.ui.dropdown').dropdown();
+
+        function lookupSelected() {
+            var lookupType = $('input[name=lookupType]').val();
+            var lookupText;
+
+            if (lookupType == "lookup_Property") {
+                lookupText = "Property";
+
+                // Columns field
+                document.getElementById("lookupInput_col_Descriptions").innerHTML = 
+                "<li>Group Parcel - Returns back parcel information (APN, subdivision, etc.)</li>"
+                    + "<li>Group Legal - Returns back legal description information</li>"
+                    + "<li>Group Last Deed Owner - Owner info listed on latest deed for the property</li>"
+                    + "<li>Group Current Deed - Other deed info listed on the latest deed for the property</li>"
+                    + "<li>Group Shape - Parcel geometry shape in well known text format</li>";
+
+                document.getElementById("lookupInput_col_column1").innerHTML = 
+                "<div class=\"ui checkbox\">"
+                    +   "<input id=\'selectAll\' type=\"checkbox\">" 
+                    +   "<label>Select All</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpParcel\"> "
+                    +   "<label>Group Parcel</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpLegal\">"
+                    +   "<label>Group Legal</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPropertyAddress\">"  
+                    +   "<label>Group Property Address</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpParsedPropertyAddress\"> "
+                    +   "<label>Group Parsed Property Address</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPrimaryOwner\"> "
+                    +   "<label>Group Primary Owner</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpSecondaryOwner\"> "
+                    +   "<label>Group Secondary Owner</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpOwnerAddress\"> "
+                    +   "<label>Group Owner Address</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpLastDeedOwnerInfo\"> "
+                    +   "<label>Group Last Deed Owner</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpCurrentDeed\"> "
+                    +   "<label>Group Current Deed</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpTax\"> "
+                    +   "<label>Group Tax</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPropertyUseInfo\"> "
+                    +   "<label>Group Property Usage</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPropertySaleInfo\"> "
+                    +   "<label>Group Property Sales</label>"
+                    + "</div>"
+                    + "<br>";
+
+                    document.getElementById("lookupInput_col_column2").innerHTML =
+                    "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPropertySize\"> "
+                    +   "<label>Group Property Size</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPool\"> "
+                    +   "<label>Group Pool</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpIntStructInfo\"> "
+                    +   "<label>Group Interior Structural</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpIntRoomInfo\"> "
+                    +   "<label>Group Interior Room</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpIntAmenities\"> "
+                    +   "<label>Group Interior Amenities</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpExtStructInfo\"> "
+                    +   "<label>Group Exterior Structural</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpExtAmenities\"> "
+                    +   "<label>Group External Amenities</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpExtBuildings\"> "
+                    +   "<label>Group External Buildings</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpUtilities\"> "
+                    +   "<label>Group Utilities</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpParking\"> "
+                    +   "<label>Group Parking</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpYardGardenInfo\"> "
+                    +   "<label>Group Yard and Garden</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpEstimatedValue\"> "
+                    +   "<label>Group Estimated Value</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpShape\"> "
+                    +   "<label>Group Shape</label>"
+                    + "</div>"
+                    + "<br>";
+                document.getElementById("lookupInput_col_columns").style.display = "";
+                document.getElementById("lookupInput_col_Container").style.display = "block";
+
+                // Input field
+                document.getElementById("lookupInput_fields_Container").innerHTML = 
+                "<div class=\"ui input right fluid\">"
+                    +   "<input type=\"text\" placeholder = \"Address Key...\" name=\"addresskey\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui input right fluid\">"
+                    + "<input type=\"text\" placeholder = \"Federal Information Processing Standard (FIPS)...\" name=\"fips\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui input right fluid\">"
+                    + "<input type=\"text\" placeholder = \"Assessor's Parcel Number (APN)...\" name=\"apn\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui input right fluid\">"
+                    + "<input type=\"text\" placeholder = \"Melissa Address Key (MAK)...\" name=\"mak\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui form\">"
+                    + "<textarea name=\"ff\" rows=\"5\" placeholder=\"Free Form Input...\"></textarea>"
+                    + "</div>"
+                    + "<br>"
+                document.getElementById("lookupInput_fields_Container").style.display = "block";
+            } else
+            if (lookupType == "lookup_Deeds") {
+                lookupText = "Deeds";
+
+                // Columns field
+                document.getElementById("lookupInput_col_Descriptions").innerHTML = 
+                "<li>Group Document - Returns Document information such as the book, page, and recording date,</li>"
+                    + "<li>Group Transaction Definition - Returns Transaction information such as the transaction type and partial interest</li>"
+                    + "<li>Group Transaction Amount - Returns Transaction Amount information such as the transaction amount and transaction tax</li>"
+                    + "<li>Group Valuation - Returns Valuation information such as the estimated down payment</li>";
+
+                document.getElementById("lookupInput_col_column1").innerHTML = 
+                "<div class=\"ui checkbox\">"
+                    +   "<input id=\'selectAll\' type=\"checkbox\">" 
+                    +   "<label>Select All</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpDocInfo\"> "
+                    +   "<label>Group Document</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpTxDefInfo\">"
+                    +   "<label>Group Transaction Definition</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpTxAmtInfo\">"  
+                    +   "<label>Group Transaction Amount</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPrimaryGrantor\"> "
+                    +   "<label>Group Primary Grantor</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpValuation\"> "
+                    +   "<label>Group Valuation</label>"
+                    + "</div>"
+                    + "<br>";       
+                    
+                    document.getElementById("lookupInput_col_column2").innerHTML =
+                    "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpSecondaryGrantor\"> "
+                    +   "<label>Group Secondary Grantor</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpPrimaryGrantee\"> "
+                    +   "<label>Group Primary Grantee</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpSecondaryGrantee\"> "
+                    +   "<label>Group Secondary Grantee</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpTitleCompInfo\"> "
+                    +   "<label>Group Title Company</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_Mortgage1\"> "
+                    +   "<label>Group Mortgage 1</label>"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui checkbox\">"
+                    +   "<input type=\"checkbox\" name=\"cols_grpMortgage2\"> "
+                    +   "<label>Group Parsed Mortgage 2</label>"
+                    + "</div>"
+                    + "<br>";                    
+                document.getElementById("lookupInput_col_columns").style.display = "";
+                document.getElementById("lookupInput_col_Container").style.display = "block";
+
+                // Input field
+                document.getElementById("lookupInput_fields_Container").innerHTML = 
+                "<div class=\"ui input right fluid\">"
+                    +   "<input type=\"text\" placeholder = \"Address Key...\" name=\"addresskey\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui input right fluid\">"
+                    + "<input type=\"text\" placeholder = \"Federal Information Processing Standard (FIPS)...\" name=\"fips\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui input right fluid\">"
+                    + "<input type=\"text\" placeholder = \"Assessor's Parcel Number (APN)...\" name=\"apn\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui input right fluid\">"
+                    + "<input type=\"text\" placeholder = \"Melissa Address Key (MAK)...\" name=\"mak\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui form\">"
+                    + "<textarea name=\"ff\" rows=\"5\" placeholder=\"Free Form Input...\"></textarea>"
+                    + "</div>"
+                    + "<br>"
+                document.getElementById("lookupInput_fields_Container").style.display = "block";
+            } else
+            if (lookupType == "lookup_HomesByOwner") {
+                lookupText = "Homes by Owner";
+
+                // Columns field
+                document.getElementById("lookupInput_col_Descriptions").innerHTML = "No additional columns to select for this lookup type";
+                document.getElementById("lookupInput_col_columns").style.display = "none";
+                document.getElementById("lookupInput_col_Container").style.display = "block";
+
+                // Input field
+                document.getElementById("lookupInput_fields_Container").innerHTML = 
+                "<div class=\"ui input right fluid\">"
+                    +   "<input type=\"text\" placeholder = \"Melissa Address Key (MAK)...\" name=\"mak\">"
+                    + "</div>"
+                    + "<br>"
+                    + "<div class=\"ui form\">"
+                    + "<textarea name=\"ff\" rows=\"5\" placeholder=\"Free Form Input...\"></textarea>"
+                    + "</div>"
+                    + "<br>"
+                document.getElementById("lookupInput_fields_Container").style.display = "block";
+            }
+
+            // main header
+            document.getElementById("lookupInput_mainHeader").innerHTML = "Lookup Selected: " + lookupText;
+
+            // inner function to check all options
+            $('#selectAll').change(function () {
+            if ($(this).prop('checked')) {
+               $('input').prop('checked', true);
+            } else {
+                $('input').prop('checked', false);
+            }
+            });
+            $('#selectAll').trigger('change');
+
+            // display
+            document.getElementById("lookupInput_container").style.display = "block";
+        }
+
+        function getColumnResponses() {
+            var columnResponses = "";
+            var lookupType = $('input[name=lookupType]').val();
+
+            if (lookupType == "lookup_Property") {
+                if ($('input[name=cols_grpParcel]').is(':checked')) columnResponses += "grpParcel,";
+                if ($('input[name=cols_grpLegal]').is(':checked')) columnResponses += "grpLegal,";
+                if ($('input[name=cols_grpPropertyAddress]').is(':checked')) columnResponses += "grpPropertyAddress,";
+                if ($('input[name=cols_grpParsedPropertyAddress]').is(':checked')) columnResponses += "grpParsedPropertyAddress,";
+                if ($('input[name=cols_grpPrimaryOwner]').is(':checked')) columnResponses += "grpPrimaryOwner,";
+                if ($('input[name=cols_grpSecondaryOwner]').is(':checked')) columnResponses += "grpSecondaryOwner,";
+                if ($('input[name=cols_grpOwnerAddress]').is(':checked')) columnResponses += "grpOwnerAddress,";
+                if ($('input[name=cols_grpLastDeedOwnerInfo]').is(':checked')) columnResponses += "grpLastDeedOwner,";
+                if ($('input[name=cols_grpCurrentDeed]').is(':checked')) columnResponses += "grpCurrentDeed,";
+                if ($('input[name=cols_grpTax]').is(':checked')) columnResponses += "grpTax,";
+                if ($('input[name=cols_grpPropertyUseInfo]').is(':checked')) columnResponses += "grpPropertyUseInfo,";
+                if ($('input[name=cols_grpPropertySaleInfo]').is(':checked')) columnResponses += "grpPropertySaleInfo,";
+                if ($('input[name=cols_grpPropertySize]').is(':checked')) columnResponses += "grpPropertySize,";
+                if ($('input[name=cols_grpPool]').is(':checked')) columnResponses += "grpPool,";
+                if ($('input[name=cols_grpIntStructInfo]').is(':checked')) columnResponses += "grpIntStructInfo,";
+                if ($('input[name=cols_grpIntRoomInfo]').is(':checked')) columnResponses += "grpIntRoomInfo,";
+                if ($('input[name=cols_grpIntAmenities]').is(':checked')) columnResponses += "grpIntAmenities,";
+                if ($('input[name=cols_grpExtStructInfo]').is(':checked')) columnResponses += "grpExtStructInfo,";
+                if ($('input[name=cols_grpExtAmenities]').is(':checked')) columnResponses += "grpExtAmenities,";
+                if ($('input[name=cols_grpExtBuildings]').is(':checked')) columnResponses += "grpExtBuildings,";
+                if ($('input[name=cols_grpUtilities]').is(':checked')) columnResponses += "grpUtilities,";
+                if ($('input[name=cols_grpParking]').is(':checked')) columnResponses += "grpParking,";
+                if ($('input[name=cols_grpYardGardenInfo]').is(':checked')) columnResponses += "grpYardGardenInfo,";
+                if ($('input[name=cols_grpEstimatedValue]').is(':checked')) columnResponses += "grpEstimatedValue,";
+                if ($('input[name=cols_grpShape]').is(':checked')) columnResponses += "grpShape,";
+            } else if (lookupType == "lookup_Deeds") {
+                if ($('input[name=cols_grpDocInfo]').is(':checked')) columnResponses += "grpDocInfo,";
+                if ($('input[name=cols_grpTxDefInfo]').is(':checked')) columnResponses += "grpTxDefInfo,";
+                if ($('input[name=cols_grpTxAmtInfo]').is(':checked')) columnResponses += "grpTxAmtInfo,";
+                if ($('input[name=cols_grpPrimaryGrantor]').is(':checked')) columnResponses += "grpPrimaryGrantor,";
+                if ($('input[name=cols_grpSecondaryGrantor]').is(':checked')) columnResponses += "grpSecondaryGrantor,";
+                if ($('input[name=cols_grpPrimaryGrantee]').is(':checked')) columnResponses += "grpPrimaryGrantee,";
+                if ($('input[name=cols_grpSecondaryGrantee]').is(':checked')) columnResponses += "grpSecondaryGrantee,";
+                if ($('input[name=cols_grpLastDeedOwnerInfo]').is(':checked')) columnResponses += "grpLastDeedOwnerInfo,";
+                if ($('input[name=cols_grpTitleCompInfo]').is(':checked')) columnResponses += "grpTitleCompInfo,";
+                if ($('input[name=cols_Mortgage1]').is(':checked')) columnResponses += "grpMortgage1,";
+                if ($('input[name=cols_grpMortgage2]').is(':checked')) columnResponses += "grpMortgage2,";
+                if ($('input[name=cols_grpValuation]').is(':checked')) columnResponses += "grpValuation,";
+            }
+            return columnResponses;
+        }
+
+		function getUserInput() {
+			var userInput = "";
+            var lookupType = $('input[name=lookupType]').val();
+			
+			if (lookupType == "lookup_HomesByOwner") {
+                userInput += "&mak=" + $('input[name=mak]').val();
+                userInput += "&ff=" + $('textarea[name=ff]').val();
+            } else {
+                userInput += "&addresskey=" + $('input[name=addresskey]').val();
+                userInput += "&fips=" + $('input[name=fips]').val();
+                userInput += "&apn=" + $('input[name=apn]').val();
+                userInput += "&mak=" + $('input[name=mak]').val();
+                userInput += "&ff=" + $('textarea[name=ff]').val();
+            }			
+            return userInput;
+		}
+
+        function doVerify() {
+            var lookupType = $('input[name=lookupType]').val();
+            var xhttp = new XMLHttpRequest();
+            var url;
+            if (lookupType == "lookup_HomesByOwner") {
+                url = "https://property.melissadata.net/v4/WEB/LookupHomesByOwner/?";
+            } else 
+            if (lookupType == "lookup_Deeds") {
+                url = "https://property.melissadata.net/v4/WEB/LookupDeeds/?";
+            } else {
+                url = "https://property.melissadata.net/v4/WEB/LookupProperty/?";
+            }
+			url += "id=" + encodeURIComponent($('input[name=id]').val());
+			url += "&cols=" + getColumnResponses().replace(/,\s*$/, "");
+			url += getUserInput();
+            url += "&format=JSON"; 
+			xhttp.open("GET", url, false); 
+			xhttp.send(); 
+			console.log(url);            
+			var response = JSON.parse(xhttp.responseText);
+			
+			$('pre[name=restOutput]').text('\n\n' + url + '\n\n\n');
+			$('pre[name=jsonOutput]').text(JSON.stringify(response, null, '\t'));
+			$('.ui.menu').find('.item').tab('change tab', 'tab-name2');
+        }
+
+        function doClear() {
+            $("input").each(function(index) {
+                $(this).val('');
+            })
+            $("textarea").each(function(index) {
+                $(this).val('');
+            })
+        }
+
+    </script>
+</body>
+</html>
